@@ -5,11 +5,10 @@ import SorterLook.algorithms
 
 class Start:
     def __init__(self, 
-                 type: str
+                type: str
                 ) -> None:
 
         self.type: str = type
-
         self.width: int = 70
         self.height: int = 20
         self.bootHeight: int = 4
@@ -30,13 +29,9 @@ class Start:
 
         self.bootWindow = curses.newwin(self.bootHeight, self.width,  0,  0)
         self.bootWindow.border(' ', ' ', ' ', '_', ' ', ' ', '_', '_')
-        self.bootScreen = SorterLook.boot.BootScreen(self.bootWindow,
-                                                     self.bootHeight,
-                                                     self.width,
-                                                     curses=curses)
+        self.bootScreen = SorterLook.boot.BootScreen(curses, self.bootWindow, self.bootHeight, self.width)
 
-        self.window = curses.newwin(
-            self.height,  self.width,  self.bootHeight - 1,  0)
+        self.window = curses.newwin(self.height,  self.width,  self.bootHeight - 1,  0)
         self.window.border(' ', ' ', '_', '_', '_', '_', '_', '_')
         self.window.refresh()
         self.window.nodelay(True)
@@ -48,4 +43,4 @@ class Start:
         self.helpWindow.attroff(curses.color_pair(1))
         self.helpWindow.refresh()
 
-        SorterLook.algorithms.Loop(self.window, curses, self.height, self.width, type=self.type)
+        SorterLook.algorithms.Loop(curses, self.window, self.height, self.width, type=self.type)
