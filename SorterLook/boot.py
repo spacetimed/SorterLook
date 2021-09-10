@@ -7,8 +7,8 @@ class BootScreen:
         self.height: int = height
         self.curses: any = curses
         self.window: self.curses._CursesWindow = window
+
         self.showContent()
-        self.window.refresh()
 
     def showContent(self) -> None:
         content: Tuple = ('<SorterLook>', 'A program that visualizes different sorting algorithms.', 'https://github.com/FFFFFF-base16/SorterLook')
@@ -20,3 +20,5 @@ class BootScreen:
             self.window.addstr(startPos, 0, line)
             self.window.attroff(self.curses.color_pair(1))
             startPos += 1
+            
+        self.window.refresh()

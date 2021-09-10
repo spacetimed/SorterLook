@@ -3,7 +3,7 @@ import concurrent.futures
 import random
 import sys
 
-from typing import Dict, Callable, Type, Optional, List
+from typing import Dict, Callable, Type, Optional, List, Union
 from concurrent.futures.thread import ThreadPoolExecutor
 
 import SorterLook.logging
@@ -18,6 +18,8 @@ class Loop:
         self.key: int = 0
         self.type: str = type
         self.logger = SorterLook.logging.Logger(__name__, self.curses, self.window, self.height, self.width)
+        self.rangeMatrix: Union[List or None] = None
+        self.displayMatrix: Union[None or List[List]] = None
 
         self.AlgorithmTable = {
             'bubble' : self.handleBubbleSort,
@@ -40,20 +42,46 @@ class Loop:
             _DisplayFuture: ThreadPoolExecutor = executor.submit(self.handleBubbleSort)
             _KeyListenerFuture: ThreadPoolExecutor = executor.submit(self.keyListener)
 
-    def DisplayHandler(func) -> None:
+    def DisplayHandlerProperty(func) -> None:
         def displayWrapper(self):
-            i = 0
             while self.running:
                 func(self)
-                self.window.refresh()
                 time.sleep(0.1)
-                i += 1
             self.destroyWindow()
         return displayWrapper
 
-    @DisplayHandler
+    @DisplayHandlerProperty
     def handleBubbleSort(self) -> None:
-        self.window.addstr(7, 5, f'handleBubbleSort')
+        if self.rangeMatrix is None:
+            self.rangeMatrix = [x for x in range(18)]
+        self.displayMatrix = self.getDisplayMatrix(self.rangeMatrix)
+        y = 0
+        x = 0
+        for line in self.displayMatrix:
+            #bar: str = ''.join(str(x) for x in line)
+            for col in line:
+                if col > 0:
+                    self.window.attron(self.curses.color_pair(1))
+                self.window.addstr(y + 1, x, str('  '))
+                self.window.attroff(self.curses.color_pair(1))
+                x += 2
+            y += 1
+            x = 0
+        self.window.refresh()
+
+    def getDisplayMatrix(self, matrix: list) -> List[List]:
+        highest: int = max(matrix)
+        y_index: int = highest
+        x_index: int = 0
+        outputMatrix: List[List] = [[0 for i in range(len(matrix))] for j in range(highest)]
+        for y in range(len(outputMatrix)):
+            for x in matrix:
+                if(x >= y_index):
+                    outputMatrix[y][x_index] = 1
+                x_index += 1
+            y_index -= 1
+            x_index = 0
+        return outputMatrix
 
     def destroyWindow(self, error: bool = False) -> Optional[None]:
         self.curses.endwin()

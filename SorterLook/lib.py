@@ -3,11 +3,10 @@ import curses
 import SorterLook.boot
 import SorterLook.algorithms
 
-class Start:
-    def __init__(self, 
-                type: str
-                ) -> None:
 
+class Start:
+
+    def __init__(self, type: str) -> None:
         self.type: str = type
         self.width: int = 70
         self.height: int = 20
