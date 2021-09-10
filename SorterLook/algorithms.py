@@ -42,22 +42,25 @@ class Loop:
         self.running = True
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             _DisplayFuture: ThreadPoolExecutor = executor.submit(self.handleRenderDisplay)
-            _KeyListenerFuture: ThreadPoolExecutor = executor.submit(self.keyListener)
+            #_KeyListenerFuture: ThreadPoolExecutor = executor.submit(self.keyListener)
             _SortFuture: ThreadPoolExecutor = executor.submit(self.handleBubbleSort)
 
     def handleRenderDisplay(self):
         while self.running:
             if self.rangeMatrix is None:
-                self.rangeMatrix = [x for x in range(9)]
+                self.rangeMatrix = [x for x in range(12)]
                 random.shuffle(self.rangeMatrix)
+                self.showProgress('working')
+            elif self.sortComplete:
+                self.showProgress('complete')
             self.displayMatrix = self.getDisplayMatrix(self.rangeMatrix)
             y = 1
-            x = x_start = 3
+            x = x_start = 10
             for line in self.displayMatrix:
                 for col in line:
                     if col > 0:
                         self.window.attron(self.curses.color_pair(1))
-                    self.window.addstr(y + 1, x, str(' ') * x_start)
+                    self.window.addstr(y + 1, x, str(' ') * 3)
                     self.window.attroff(self.curses.color_pair(1))
                     x += 3
                 y += 1
@@ -65,6 +68,21 @@ class Loop:
             self.window.refresh()
             time.sleep(0.5)
         self.destroyWindow()
+
+    def showProgress(self, type):
+        if(type == 'working'):
+            self.window.attron(self.curses.color_pair(4))
+            self.window.addstr(self.height - 2, 2, 'Sort in progress...'.center(self.width - 5))
+            self.window.attroff(self.curses.color_pair(4))
+        elif(type == 'complete'):
+            self.window.attron(self.curses.color_pair(3))
+            self.window.addstr(self.height - 2, 2, 'Sort Complete!'.center(self.width - 5))
+            self.window.attroff(self.curses.color_pair(3))
+        elif(type == 'preparing'):
+            self.window.attron(self.curses.color_pair(4))
+            self.window.addstr(self.height - 2, 2, 'Preparing...'.center(self.width - 5))
+            self.window.attroff(self.curses.color_pair(4))
+            self.window.refresh()
 
     def handleBubbleSort(self) -> None:
         while self.running:
@@ -74,7 +92,8 @@ class Loop:
                     for j in range(0, n-i-1):
                         if self.rangeMatrix[j] > self.rangeMatrix[j + 1] :
                             self.rangeMatrix[j], self.rangeMatrix[j + 1] = self.rangeMatrix[j + 1], self.rangeMatrix[j]
-                        time.sleep(0.5)
+                        time.sleep(0.1)
+                self.sortComplete = True
                     
 
     def getDisplayMatrix(self, matrix: list) -> List[List]:
