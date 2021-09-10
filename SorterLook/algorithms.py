@@ -32,6 +32,7 @@ class Loop:
         self.AlgorithmTable: Dict[str, Callable[[None], None]] = {
             'bubble' : self.handleBubbleSort,
             'insertion' : self.handleInsertionSort,
+            'merge' : self.handleMergeSort,
         }
 
         if self.type not in self.AlgorithmTable:
@@ -100,6 +101,7 @@ class Loop:
             self.window.attroff(self.curses.color_pair(3))
             self.window.refresh()
 
+    #O(n^2)
     def handleBubbleSort(self) -> None:
         if self.rangeMatrix is not None:
             n: int = len(self.rangeMatrix)
@@ -115,6 +117,7 @@ class Loop:
                     break
             self.sortComplete = True
 
+    #O(n^2)
     def handleInsertionSort(self) -> None:
         for i in range(1, len(self.rangeMatrix)):
             item = self.rangeMatrix[i]
@@ -127,6 +130,48 @@ class Loop:
             self.rangeMatrix[j + 1] = item
             time.sleep(0.1)
         self.sortComplete = True
+
+    #O(n log_2 (n))
+    def handleMergeSort(self) -> None:
+        self.ogMatrix = self.rangeMatrix.copy()
+        self.ogMatrix = self.beginMergeSort(self.ogMatrix)
+        self.sortComplete = True
+
+    def beginMergeSort(self, array):
+        if len(array) < 2:
+            return array
+        midpoint = len(array) // 2
+        toReturn = self.compMergeSort(
+            left=self.beginMergeSort(array[:midpoint]),
+            right=self.beginMergeSort(array[midpoint:])
+        )
+        return toReturn
+        
+    def compMergeSort(self, left, right):
+        if len(left) == 0:
+            return right
+        if len(right) == 0:
+            return left
+        result = []
+        index_left = index_right = 0
+        while len(result) < len(left) + len(right):
+            if left[index_left] <= right[index_right]:
+                result.append(left[index_left])
+                index_left += 1
+            else:
+                result.append(right[index_right])
+                index_right += 1
+            if index_right == len(right):
+                result += left[index_left:]
+                break
+            if index_left == len(left):
+                result += right[index_right:]
+                break
+        for i in range(len(result)):
+            self.rangeMatrix[i] = result[i]
+            self.activeColumn = i
+        time.sleep(0.1)
+        return result
 
     def getDisplayMatrix(self, matrix: list) -> List[List]:
         lenL: int = len(matrix)
