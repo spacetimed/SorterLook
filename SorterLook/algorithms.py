@@ -6,6 +6,7 @@ import sys
 from typing import Dict, Callable, Type, Optional, List
 from concurrent.futures.thread import ThreadPoolExecutor
 
+import SorterLook.logging
 
 class Loop:
     def __init__(self, curses: any, window: any, height: int, width: int, type: str) -> None:
@@ -15,10 +16,18 @@ class Loop:
         self.width: int = width
         self.running: bool = False
         self.key: int = 0
+        self.type: str = type
+        self.logger = SorterLook.logging.Logger(__name__, self.curses, self.window, self.height, self.width)
 
         self.AlgorithmTable = {
             'bubble' : self.handleBubbleSort,
         }
+
+        if self.type not in self.AlgorithmTable:
+            self.logger('An unknown sorting algorithm type was provided.')
+            time.sleep(5)
+            self.destroyWindow()
+            sys.exit()
 
         try:
             self.mainLoop()
@@ -28,10 +37,10 @@ class Loop:
     def mainLoop(self) -> None:
         self.running = True
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            DisplayFuture: ThreadPoolExecutor = executor.submit(self.handleBubbleSort)
-            KeyListenerFuture: ThreadPoolExecutor = executor.submit(self.keyListener)
+            _DisplayFuture: ThreadPoolExecutor = executor.submit(self.handleBubbleSort)
+            _KeyListenerFuture: ThreadPoolExecutor = executor.submit(self.keyListener)
 
-    def displayHandler(func) -> None:
+    def DisplayHandler(func) -> None:
         def displayWrapper(self):
             i = 0
             while self.running:
@@ -39,14 +48,14 @@ class Loop:
                 self.window.refresh()
                 time.sleep(0.1)
                 i += 1
-            self.handleQuit()
+            self.destroyWindow()
         return displayWrapper
 
-    @displayHandler
+    @DisplayHandler
     def handleBubbleSort(self) -> None:
         self.window.addstr(7, 5, f'handleBubbleSort')
 
-    def handleQuit(self) -> None:
+    def destroyWindow(self, error: bool = False) -> Optional[None]:
         self.curses.endwin()
         time.sleep(0.1)
         print('Quitting')
