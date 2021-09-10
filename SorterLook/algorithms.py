@@ -22,6 +22,7 @@ class Loop:
         self.rangeMatrix: Union[List or None] = None
         self.displayMatrix: Union[None or List[List]] = None
         self.sortComplete: bool = False
+        self.activeColumn: int = 0
 
         self.AlgorithmTable = {
             'bubble' : self.handleBubbleSort,
@@ -48,25 +49,30 @@ class Loop:
     def handleRenderDisplay(self):
         while self.running:
             if self.rangeMatrix is None:
-                self.rangeMatrix = [x for x in range(12)]
+                self.rangeMatrix = [x for x in range(16)]
                 random.shuffle(self.rangeMatrix)
                 self.showProgress('working')
             elif self.sortComplete:
                 self.showProgress('complete')
             self.displayMatrix = self.getDisplayMatrix(self.rangeMatrix)
             y = 1
-            x = x_start = 10
+            x = x_start = 8
+            x_index = 0
             for line in self.displayMatrix:
                 for col in line:
                     if col > 0:
                         self.window.attron(self.curses.color_pair(1))
+                        if x_index == self.activeColumn:
+                            self.window.attron(self.curses.color_pair(3))
                     self.window.addstr(y + 1, x, str(' ') * 3)
                     self.window.attroff(self.curses.color_pair(1))
                     x += 3
+                    x_index += 1
                 y += 1
                 x = x_start
+                x_index = 0
             self.window.refresh()
-            time.sleep(0.5)
+            time.sleep(0.2)
         self.destroyWindow()
 
     def showProgress(self, type):
@@ -85,15 +91,15 @@ class Loop:
             self.window.refresh()
 
     def handleBubbleSort(self) -> None:
-        while self.running:
-            if self.rangeMatrix is not None:
-                n = len(self.rangeMatrix)
-                for i in range(n-1):
-                    for j in range(0, n-i-1):
-                        if self.rangeMatrix[j] > self.rangeMatrix[j + 1] :
-                            self.rangeMatrix[j], self.rangeMatrix[j + 1] = self.rangeMatrix[j + 1], self.rangeMatrix[j]
-                        time.sleep(0.1)
-                self.sortComplete = True
+        if self.rangeMatrix is not None:
+            n = len(self.rangeMatrix)
+            for i in range(n-1):
+                for j in range(0, n-i-1):
+                    self.activeColumn = j + 1
+                    if self.rangeMatrix[j] > self.rangeMatrix[j + 1] :
+                        self.rangeMatrix[j], self.rangeMatrix[j + 1] = self.rangeMatrix[j + 1], self.rangeMatrix[j]
+                    time.sleep(0.1)
+            self.sortComplete = True
                     
 
     def getDisplayMatrix(self, matrix: list) -> List[List]:
