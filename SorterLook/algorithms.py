@@ -14,30 +14,45 @@ class Loop:
         self.height: int = height
         self.width: int = width
         self.running: bool = False
-        self.k: int = 0
+        self.key: int = 0
+
+        self.AlgorithmTable = {
+            'bubble' : self.handleBubbleSort,
+        }
+
         try:
             self.mainLoop()
         except KeyboardInterrupt:
             self.running = False
 
-    def mainLoop(self):
+    def mainLoop(self) -> None:
         self.running = True
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            executor.submit(self.output)
-            executor.submit(self.keyListener)
+            DisplayFuture: ThreadPoolExecutor = executor.submit(self.handleBubbleSort)
+            KeyListenerFuture: ThreadPoolExecutor = executor.submit(self.keyListener)
 
-    def output(self) -> Optional[str]:
-        i = 0
-        while self.running:
-            self.window.addstr(7, 5, f'output')
-            self.window.refresh()
-            i += 1
+    def displayHandler(func) -> None:
+        def displayWrapper(self):
+            i = 0
+            while self.running:
+                func(self)
+                self.window.refresh()
+                time.sleep(0.1)
+                i += 1
+            self.handleQuit()
+        return displayWrapper
+
+    @displayHandler
+    def handleBubbleSort(self) -> None:
+        self.window.addstr(7, 5, f'handleBubbleSort')
+
+    def handleQuit(self) -> None:
         self.curses.endwin()
         time.sleep(0.1)
         print('Quitting')
         time.sleep(1)
 
-    def keyListener(self) -> Optional[str]:
-        while (self.k != ord('q')) and (self.running):
-            self.k = self.window.getch()
+    def keyListener(self) -> None:
+        while (self.key != ord('q')) and (self.running):
+            self.key = self.window.getch()
         self.running = False
