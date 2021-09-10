@@ -41,7 +41,7 @@ class Start:
         self.helpWindow = curses.newwin(self.helpHeight,  self.width,  self.bootHeight + self.height - 1,  0)
         self.helpWindow.border(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ')
         self.helpWindow.attron(curses.color_pair(1))
-        self.helpWindow.addstr(0, 0, 'Press q to exit.'.center(self.width))
+        self.helpWindow.addstr(0, 0, 'Press <Ctrl+C> to exit.'.center(self.width))
         self.helpWindow.attroff(curses.color_pair(1))
         self.helpWindow.refresh()
 
