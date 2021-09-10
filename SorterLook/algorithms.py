@@ -3,6 +3,7 @@ import concurrent.futures
 import random
 import sys
 
+import random
 from typing import Dict, Callable, Type, Optional, List, Union
 from concurrent.futures.thread import ThreadPoolExecutor
 
@@ -20,6 +21,7 @@ class Loop:
         self.logger = SorterLook.logging.Logger(__name__, self.curses, self.window, self.height, self.width)
         self.rangeMatrix: Union[List or None] = None
         self.displayMatrix: Union[None or List[List]] = None
+        self.sortComplete: bool = False
 
         self.AlgorithmTable = {
             'bubble' : self.handleBubbleSort,
@@ -38,36 +40,42 @@ class Loop:
 
     def mainLoop(self) -> None:
         self.running = True
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            _DisplayFuture: ThreadPoolExecutor = executor.submit(self.handleBubbleSort)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            _DisplayFuture: ThreadPoolExecutor = executor.submit(self.handleRenderDisplay)
             _KeyListenerFuture: ThreadPoolExecutor = executor.submit(self.keyListener)
+            _SortFuture: ThreadPoolExecutor = executor.submit(self.handleBubbleSort)
 
-    def DisplayHandlerProperty(func) -> None:
-        def displayWrapper(self):
-            while self.running:
-                func(self)
-                time.sleep(0.1)
-            self.destroyWindow()
-        return displayWrapper
+    def handleRenderDisplay(self):
+        while self.running:
+            if self.rangeMatrix is None:
+                self.rangeMatrix = [x for x in range(9)]
+                random.shuffle(self.rangeMatrix)
+            self.displayMatrix = self.getDisplayMatrix(self.rangeMatrix)
+            y = 1
+            x = x_start = 3
+            for line in self.displayMatrix:
+                for col in line:
+                    if col > 0:
+                        self.window.attron(self.curses.color_pair(1))
+                    self.window.addstr(y + 1, x, str(' ') * x_start)
+                    self.window.attroff(self.curses.color_pair(1))
+                    x += 3
+                y += 1
+                x = x_start
+            self.window.refresh()
+            time.sleep(0.5)
+        self.destroyWindow()
 
-    @DisplayHandlerProperty
     def handleBubbleSort(self) -> None:
-        if self.rangeMatrix is None:
-            self.rangeMatrix = [x for x in range(18)]
-        self.displayMatrix = self.getDisplayMatrix(self.rangeMatrix)
-        y = 0
-        x = 0
-        for line in self.displayMatrix:
-            #bar: str = ''.join(str(x) for x in line)
-            for col in line:
-                if col > 0:
-                    self.window.attron(self.curses.color_pair(1))
-                self.window.addstr(y + 1, x, str('  '))
-                self.window.attroff(self.curses.color_pair(1))
-                x += 2
-            y += 1
-            x = 0
-        self.window.refresh()
+        while self.running:
+            if self.rangeMatrix is not None:
+                n = len(self.rangeMatrix)
+                for i in range(n-1):
+                    for j in range(0, n-i-1):
+                        if self.rangeMatrix[j] > self.rangeMatrix[j + 1] :
+                            self.rangeMatrix[j], self.rangeMatrix[j + 1] = self.rangeMatrix[j + 1], self.rangeMatrix[j]
+                        time.sleep(0.5)
+                    
 
     def getDisplayMatrix(self, matrix: list) -> List[List]:
         highest: int = max(matrix)

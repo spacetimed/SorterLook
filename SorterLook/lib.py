@@ -26,6 +26,8 @@ class Start:
         curses.start_color()
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
         curses.init_pair(2, curses.COLOR_RED, curses.COLOR_WHITE)
+        curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_GREEN)
+        curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_YELLOW)
 
         self.bootWindow = curses.newwin(self.bootHeight, self.width,  0,  0)
         self.bootWindow.border(' ', ' ', ' ', '_', ' ', ' ', '_', '_')
